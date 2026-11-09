@@ -2,7 +2,6 @@
 
 An end-to-end data pipeline that collects live Hong Kong Government job vacancies, cleans and enriches them with Pandas, stores them in MongoDB, and presents insights in an interactive Streamlit dashboard.
 
-![Dashboard](docs/dashboard.png)
 
 ## Architecture
 
@@ -31,7 +30,7 @@ MongoDB  ──►  Streamlit + Plotly dashboard
 - **Deduplication** on `job_id` (the same vacancy can appear in more than one group).
 - **Salary parsing:** pay is split across monthly/hourly/daily fields, and the maximum only exists in free text (e.g. `"HK$72,430 - HK$103,810 depending on…"`). Regex extracts numeric `min_pay` / `max_pay` and a `pay_basis` column, so hourly and monthly pay are never mixed.
 - **Placeholder dates:** `2099-12-31` means "no closing date"; it is converted to a boolean `open_until_filled` instead of a misleading date.
-- **Text normalisation:** tabs, line breaks, empty strings and `"-"` are cleaned to proper missing values.
+- **Text normalisation:** tabs, line breaks, empty strings, and `"-"` are cleaned to proper missing values.
 - **Feature engineering:** highest qualification required, skills mentioned (Excel, SQL, Putonghua…), days since posted.
 
 ## MongoDB design
@@ -39,14 +38,6 @@ MongoDB  ──►  Streamlit + Plotly dashboard
 - **Indexes:** unique `job_id`; `department`; compound `(pay_basis, min_pay)` for pay-ranked queries; `published_date`; text index on title + duties for keyword search.
 - **Aggregation pipelines** (`$match`, `$group`, `$unwind`, `$sort`) compute analytics inside the database.
 
-## Key insights (snapshot: 9 Nov 2026, 61 vacancies)
-- **Department of Health is the largest hirer** (13 of 61 vacancies), followed by Development Bureau and Education Bureau (5 each).
-- **English is required in 51 of 61 roles; data skills are rare.** SQL appears in 1 vacancy and data analysis in 2, which points to an opportunity to build data capability in public-sector roles.
-- **Average pay needs care:** several departments have only one vacancy, so the dashboard uses the **median** and shows job counts next to averages.
-
-## Challenges solved
-- The government feed starts with a **UTF-8 BOM**, which breaks standard JSON parsing; it is decoded with `utf-8-sig`.
-- Salary information was split across inconsistent fields and free text (see above).
 
 ## Run it locally
 ```bash
@@ -63,7 +54,7 @@ streamlit run app.py          # open http://localhost:8501
 Data comes from DATA.GOV.HK open data, which is published for public reuse. The scraper identifies itself with a User-Agent, uses timeouts and backs off between retries.
 
 ## Roadmap
-- [ ] Scheduled daily runs (GitHub Actions / cron) to build a history of vacancies over time
+- [ ] Scheduled daily runs (GitHub Actions/cron) to build a history of vacancies over time
 - [ ] Additional private-sector sources with **Scrapy** (scale) and **Selenium** (JavaScript-rendered pages)
 - [ ] **FastAPI** endpoint so other systems can query the data
 - [ ] **Docker** packaging and cloud deployment (MongoDB Atlas + Streamlit Community Cloud)
